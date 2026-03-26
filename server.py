@@ -2,21 +2,55 @@ import threading
 import socket
 
 ENCODING = 'utf-8'
-SERVER_ADDRESS = ("10.147.139.11", 15662)
+SERVER_ADDRESS = (socket.gethostname(), 15662)
+
+participants = []
+
+class User:
+    def __init__(self, username, client_socket):
+        self.username = username
+        self.client_socket = client_socket
+
+def receive_from_user(user: User):
+    return user.client_socket.recv(1024).decode(ENCODING)
+
+def send_to_user(user: User, message):
+    return user.client_socket.send(message.encode(ENCODING))
+
+def broadcast(message):
+    for user in participants:
+        user.client_socket.send(message.encode(ENCODING))
+
+def handle_new_connection(user: User):
+    while True:
+        try:
+            message = receive_from_user(user)
+            broadcast(message)
+        except Exception as e:
+            print(e)
+            try:
+                participants.remove(user)
+                user.client_socket.close()
+                broadcast(f" -- {user.username} has disturbed the peace for too long and was banished to the shadow realm.")
+            finally:
+                break
 
 def receive():
-    client_socket, address = server.accept()
-    print(f"Connected from {address}")
     while True:
+        client_socket, address = server.accept()
+        print(f"Connected from {str(address)}")
 
-        request = client_socket.recv(1024).decode(ENCODING)
-        if request.lower() == 'close':
-            client_socket.send("close".encode(ENCODING))
-            break
+        client_socket.send("Username: ".encode(ENCODING))
+        username = client_socket.recv(1024).decode(ENCODING)
 
-        print(f"Recieved {request}")
+        new_user = User(username, client_socket)
+        participants.append(new_user)
 
+        broadcast(f"{new_user} has joined the chat")
+        send_to_user(new_user, f"Welcome {username}!")
 
+        thread = threading.Thread(target=handle_new_connection, args=(new_user,))
+        thread.start()
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(SERVER_ADDRESS)

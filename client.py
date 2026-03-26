@@ -1,7 +1,7 @@
 import socket
 #KILDE: https://www.datacamp.com/tutorial/a-complete-guide-to-socket-programming-in-python
 
-SERVER_ADDRESS = ("10.147.139.11", 15662)
+SERVER_ADDRESS = (socket.gethostname(), 15662)
 ENCODING = "utf-8"
 
 username = input("username: ")
