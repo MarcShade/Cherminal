@@ -1,6 +1,12 @@
 import threading
 import socket
 
+# ANSI escape codes:
+# \033[2J - clear the entire screen
+# \033[H - move cursor to top left
+# \033[A - Move cursor up one line
+# \033[K - Clear from cursor to end of line
+
 ENCODING = 'utf-8'
 SERVER_ADDRESS = (socket.gethostname(), 15662)
 
@@ -25,7 +31,7 @@ def handle_new_connection(user: User):
     while True:
         try:
             message = receive_from_user(user)
-            broadcast(message)
+            broadcast(f"{user.username}: {message}")
         except Exception as e:
             print(e)
             try:
@@ -40,14 +46,13 @@ def receive():
         client_socket, address = server.accept()
         print(f"Connected from {str(address)}")
 
-        client_socket.send("Username: ".encode(ENCODING))
         username = client_socket.recv(1024).decode(ENCODING)
 
         new_user = User(username, client_socket)
         participants.append(new_user)
 
-        broadcast(f"{new_user} has joined the chat")
-        send_to_user(new_user, f"Welcome {username}!")
+        broadcast(f"{new_user.username} has joined the chat")
+        send_to_user(new_user, f"\nWelcome {username}!")
 
         thread = threading.Thread(target=handle_new_connection, args=(new_user,))
         thread.start()
@@ -57,4 +62,5 @@ server.bind(SERVER_ADDRESS)
 server.listen()
 
 print('Server is listening... ')
+
 receive()
