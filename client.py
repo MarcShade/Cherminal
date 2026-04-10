@@ -5,10 +5,83 @@ import curses
 SERVER_ADDRESS = (socket.gethostname(), 15662)
 ENCODING = "utf-8"
 
-username = input("Username: ")
 print_lock = threading.Lock()
 
-def run_client(stdscr):
+title = """
+   :####:  ##    ##  ########  ######:   ###  ###   ######   ###   ##    :##:    ##       
+  ######  ##    ##  ########  #######   ###  ###   ######   ###   ##     ##     ##       
+:##:  .#  ##    ##  ##        ##   :##  ###::###     ##     ###:  ##    ####    ##       
+##        ##    ##  ##        ##    ##  ###  ###     ##     ####  ##    ####    ##       
+##.       ##    ##  ##        ##   :##  ## ## ##     ##     ##:#: ##   :#  #:   ##       
+##        ########  #######   #######:  ##:##:##     ##     ## ## ##    #::#    ##       
+##        ########  #######   ######    ##.##.##     ##     ## ## ##   ##  ##   ##       
+##.       ##    ##  ##        ##   ##.  ## ## ##     ##     ## :#:##   ######   ##       
+##        ##    ##  ##        ##   ##   ##    ##     ##     ##  ####  .######.  ##       
+:##:  .#  ##    ##  ##        ##   :##  ##    ##     ##     ##  :###  :##  ##:  ##       
+  ######  ##    ##  ########  ##    ##: ##    ##   ######   ##   ###  ###  ###  ######## 
+  :####:  ##    ##  ########  ##    ### ##    ##   ######   ##   ###  ##:  :##  ########
+"""
+
+username_prompt = """
+╔══════════════════════════════════════════════════════╗
+║                                                      ║
+║   Enter a username:                                  ║
+║                                                      ║
+╚══════════════════════════════════════════════════════╝
+"""
+
+max_username_len = 32
+
+def center_text(scr, start_y, text):
+    height, width = scr.getmaxyx()
+    lines = text.strip().split("\n")
+    for i, line in enumerate(lines):
+        x = max(0, (width - len(line)) // 2)
+        y = i
+        if 0 <= y < height:
+            scr.addstr(y, x, line)
+
+def prep_client(stdscr):
+    curses.curs_set(1)
+
+    height, width = stdscr.getmaxyx()
+    input_pos = [int(height / 2) + 2, int(width/2)-6]
+    print(int(width/2))
+
+    ascii_win = curses.newwin(int(height/2)-1, width, 1, 0)
+    input_prompt_win = curses.newwin(int(height/2), width, int(height/2), 0)
+    input_text_win = curses.newwin(1, width-(input_pos[1]+max_username_len+1), input_pos[0], input_pos[1])
+
+    lines = title.strip().split("\n")
+
+    center_text(ascii_win, 10, title)
+    center_text(input_prompt_win, 0, username_prompt)
+    input_prompt_win.refresh()
+    ascii_win.refresh()
+
+    curses_lock = threading.Lock()
+
+    current_input = ""
+
+    while True:
+        char = input_text_win.get_wch()  # Get one character at a time
+        if char == "\n":  # This means the user has pressed enter
+            break
+        elif char in (curses.KEY_BACKSPACE, "\b", "\x7f"):
+            current_input = current_input[:-1]
+        elif isinstance(char, str) and len(current_input) < max_username_len:
+            current_input += char
+
+        with curses_lock:
+            input_text_win.clear()
+            input_text_win.addstr(current_input)
+            input_text_win.refresh()
+
+    username = current_input
+
+    return username
+
+def run_client(stdscr, username):
     curses.curs_set(1)
     stdscr.nodelay(False)
 
@@ -83,4 +156,8 @@ def run_client(stdscr):
     client.close()
     print("Connection to server closed")
 
-curses.wrapper(run_client)
+def main(stdscr):
+    username = prep_client(stdscr)
+    run_client(stdscr, username)
+
+curses.wrapper(main)
