@@ -1,82 +1,64 @@
 import socket
 import threading
 import curses
+import ASCII_art as ascii
 
 SERVER_ADDRESS = (socket.gethostname(), 15662)
 ENCODING = "utf-8"
 
 print_lock = threading.Lock()
+curses_lock = threading.Lock()
 
-title = """
-   :####:  ##    ##  ########  ######:   ###  ###   ######   ###   ##    :##:    ##       
-  ######  ##    ##  ########  #######   ###  ###   ######   ###   ##     ##     ##       
-:##:  .#  ##    ##  ##        ##   :##  ###::###     ##     ###:  ##    ####    ##       
-##        ##    ##  ##        ##    ##  ###  ###     ##     ####  ##    ####    ##       
-##.       ##    ##  ##        ##   :##  ## ## ##     ##     ##:#: ##   :#  #:   ##       
-##        ########  #######   #######:  ##:##:##     ##     ## ## ##    #::#    ##       
-##        ########  #######   ######    ##.##.##     ##     ## ## ##   ##  ##   ##       
-##.       ##    ##  ##        ##   ##.  ## ## ##     ##     ## :#:##   ######   ##       
-##        ##    ##  ##        ##   ##   ##    ##     ##     ##  ####  .######.  ##       
-:##:  .#  ##    ##  ##        ##   :##  ##    ##     ##     ##  :###  :##  ##:  ##       
-  ######  ##    ##  ########  ##    ##: ##    ##   ######   ##   ###  ###  ###  ######## 
-  :####:  ##    ##  ########  ##    ### ##    ##   ######   ##   ###  ##:  :##  ########
-"""
 
-username_prompt = """
-╔══════════════════════════════════════════════════════╗
-║                                                      ║
-║   Enter a username:                                  ║
-║                                                      ║
-╚══════════════════════════════════════════════════════╝
-"""
-
-def center_text(scr, start_y, text):
+def center_text(scr, text, start_y = 0):
     height, width = scr.getmaxyx()
     lines = text.strip().split("\n")
     for i, line in enumerate(lines):
         x = max(0, (width - len(line)) // 2)
-        y = i
+        y = i + start_y
         if 0 <= y < height:
             scr.addstr(y, x, line)
+
+def handle_input(scr, max_len, prefix=""):
+    input = ""
+
+    while True:
+        char = scr.get_wch()  # Get one character at a time
+        if char == "\n":  # This means the user has pressed enter
+            break
+        elif char in (curses.KEY_BACKSPACE, "\b", "\x7f"):
+            input = input[:-1]
+        elif isinstance(char, str) and (len(input) + len(prefix)) < max_len:
+            input += char
+
+        with curses_lock:
+            scr.clear()
+            scr.addstr(prefix + input)
+            scr.refresh()
+
+    return input
+
 
 def prep_client(stdscr):
     curses.curs_set(1)
 
     height, width = stdscr.getmaxyx()
 
-    ascii_win = curses.newwin(int(height/2)-1, width, 1, 0)
+    ascii_win = curses.newwin(int(height/2)-1, width, 0, 0)
     input_prompt_win = curses.newwin(int(height/2), width, int(height/2), 0)
 
     max_username_len = 30
     username_input_pos = [int(height / 2) + 2, int(width / 2) - 6]
     username_input_win = curses.newwin(1, max_username_len + 1, username_input_pos[0], username_input_pos[1])
 
-    lines = title.strip().split("\n")
+    lines = ascii.title.strip().split("\n")
 
-    center_text(ascii_win, 10, title)
-    center_text(input_prompt_win, 0, username_prompt)
+    center_text(ascii_win, ascii.title, 1)
+    center_text(input_prompt_win, ascii.username_prompt, 0)
     input_prompt_win.refresh()
     ascii_win.refresh()
 
-    curses_lock = threading.Lock()
-
-    username_input = ""
-
-    while True:
-        char = username_input_win.get_wch()  # Get one character at a time
-        if char == "\n":  # This means the user has pressed enter
-            break
-        elif char in (curses.KEY_BACKSPACE, "\b", "\x7f"):
-            username_input = username_input[:-1]
-        elif isinstance(char, str) and len(username_input) < max_username_len:
-            username_input += char
-
-        with curses_lock:
-            username_input_win.clear()
-            username_input_win.addstr(username_input)
-            username_input_win.refresh()
-
-    username = username_input
+    username = handle_input(username_input_win, max_username_len)
 
     return username
 
@@ -93,7 +75,8 @@ def run_client(stdscr, username):
     # Input window (bottom line)
     max_input_len = 90
     prompt = f"{username}: "
-    input_win = curses.newwin(1, len(prompt) + max_input_len + 1, height - 1, 0)
+    # input_win = curses.newwin(1, len(prompt) + max_input_len , height - 1, 0)
+    input_win = curses.newwin(1, width, height - 1, 0)
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(SERVER_ADDRESS)
@@ -127,23 +110,7 @@ def run_client(stdscr, username):
             input_win.addstr(prompt)
             input_win.refresh()
 
-        input = ""
-
-        while True:
-            char = input_win.get_wch()
-            if char == "\n":
-                break
-            elif char in (curses.KEY_BACKSPACE, "\b", "\x7f"):
-                input = input[:-1]  # just delete, no length condition needed
-            elif isinstance(char, str) and len(input) < max_input_len:  # cap typing here
-                input += char
-
-            with curses_lock:
-                input_win.clear()
-                input_win.addstr(prompt + input)
-                input_win.refresh()
-
-        msg = input
+        msg = handle_input(input_win, max_input_len, prompt)
 
         with curses_lock:
             input_win.clear()  # wipe whatever is left in the buffer. I can't get shit to work without this here for some reason.

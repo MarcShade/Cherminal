@@ -18,12 +18,15 @@ class User:
         self.client_socket = client_socket
 
 def receive_from_user(user: User):
+    print(f"Receiving message from {user.username}")
     return user.client_socket.recv(1024).decode(ENCODING)
 
 def send_to_user(user: User, message):
+    print(f"Sent {message} to {user.username}")
     return user.client_socket.send(message.encode(ENCODING))
 
 def broadcast(message):
+    print(f"Broadcasting {message}")
     for user in participants:
         user.client_socket.send(message.encode(ENCODING))
 
@@ -37,16 +40,18 @@ def handle_new_connection(user: User):
             try:
                 participants.remove(user)
                 user.client_socket.close()
-                broadcast(f" -- {user.username} has disturbed the peace for too long and was banished to the shadow realm.")
+                broadcast(f"{user.username} has left the chatroom")
             finally:
                 break
 
 def receive():
     while True:
         client_socket, address = server.accept()
-        print(f"Connected from {str(address)}")
+        print(f"Connected from {str(address)}", end="")
 
         username = client_socket.recv(1024).decode(ENCODING)
+
+        print(f" with username {username}")
 
         new_user = User(username, client_socket)
         participants.append(new_user)
