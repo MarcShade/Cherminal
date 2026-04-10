@@ -30,8 +30,6 @@ username_prompt = """
 ╚══════════════════════════════════════════════════════╝
 """
 
-max_username_len = 32
-
 def center_text(scr, start_y, text):
     height, width = scr.getmaxyx()
     lines = text.strip().split("\n")
@@ -45,12 +43,13 @@ def prep_client(stdscr):
     curses.curs_set(1)
 
     height, width = stdscr.getmaxyx()
-    input_pos = [int(height / 2) + 2, int(width/2)-6]
-    print(int(width/2))
 
     ascii_win = curses.newwin(int(height/2)-1, width, 1, 0)
     input_prompt_win = curses.newwin(int(height/2), width, int(height/2), 0)
-    input_text_win = curses.newwin(1, width-(input_pos[1]+max_username_len+1), input_pos[0], input_pos[1])
+
+    max_username_len = 30
+    username_input_pos = [int(height / 2) + 2, int(width/2)-6]
+    input_text_win = curses.newwin(1, max_username_len+1, username_input_pos[0], username_input_pos[1])
 
     lines = title.strip().split("\n")
 
