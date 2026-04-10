@@ -48,8 +48,8 @@ def prep_client(stdscr):
     input_prompt_win = curses.newwin(int(height/2), width, int(height/2), 0)
 
     max_username_len = 30
-    username_input_pos = [int(height / 2) + 2, int(width/2)-6]
-    input_text_win = curses.newwin(1, max_username_len+1, username_input_pos[0], username_input_pos[1])
+    username_input_pos = [int(height / 2) + 2, int(width / 2) - 6]
+    username_input_win = curses.newwin(1, max_username_len + 1, username_input_pos[0], username_input_pos[1])
 
     lines = title.strip().split("\n")
 
@@ -60,23 +60,23 @@ def prep_client(stdscr):
 
     curses_lock = threading.Lock()
 
-    current_input = ""
+    username_input = ""
 
     while True:
-        char = input_text_win.get_wch()  # Get one character at a time
+        char = username_input_win.get_wch()  # Get one character at a time
         if char == "\n":  # This means the user has pressed enter
             break
         elif char in (curses.KEY_BACKSPACE, "\b", "\x7f"):
-            current_input = current_input[:-1]
-        elif isinstance(char, str) and len(current_input) < max_username_len:
-            current_input += char
+            username_input = username_input[:-1]
+        elif isinstance(char, str) and len(username_input) < max_username_len:
+            username_input += char
 
         with curses_lock:
-            input_text_win.clear()
-            input_text_win.addstr(current_input)
-            input_text_win.refresh()
+            username_input_win.clear()
+            username_input_win.addstr(username_input)
+            username_input_win.refresh()
 
-    username = current_input
+    username = username_input
 
     return username
 
@@ -91,7 +91,9 @@ def run_client(stdscr, username):
     msg_win.scrollok(True)  # auto-scroll when full
     
     # Input window (bottom line)
-    input_win = curses.newwin(1, width, height - 1, 0)
+    max_input_len = 90
+    prompt = f"{username}: "
+    input_win = curses.newwin(1, len(prompt) + max_input_len + 1, height - 1, 0)
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(SERVER_ADDRESS)
@@ -125,23 +127,23 @@ def run_client(stdscr, username):
             input_win.addstr(prompt)
             input_win.refresh()
 
-        current_input = ""
+        input = ""
 
         while True:
-            char = input_win.get_wch() # Get one character at a time
-            if char == "\n": # This means the user has pressed enter
+            char = input_win.get_wch()
+            if char == "\n":
                 break
             elif char in (curses.KEY_BACKSPACE, "\b", "\x7f"):
-                current_input = current_input[:-1]
-            elif isinstance(char, str):
-                current_input += char
-            
+                input = input[:-1]  # just delete, no length condition needed
+            elif isinstance(char, str) and len(input) < max_input_len:  # cap typing here
+                input += char
+
             with curses_lock:
                 input_win.clear()
-                input_win.addstr(prompt + current_input)
+                input_win.addstr(prompt + input)
                 input_win.refresh()
 
-        msg = current_input
+        msg = input
 
         with curses_lock:
             input_win.clear()  # wipe whatever is left in the buffer. I can't get shit to work without this here for some reason.
