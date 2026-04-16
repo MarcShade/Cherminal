@@ -39,13 +39,13 @@ def receive_from_user(user: User):
 
 def send_to_user(user: User, message):
     print(f"Sent {message} to {user.username}")
-    return user.client_socket.send(message.encode(ENCODING))
+    return user.client_socket.send(f"@{message}".encode(ENCODING))
 
 def broadcast(message):
     print(f"Broadcasting {message}")
     for user in participants:
         if user.state == MessageStates.PUBLIC_STATE:
-            user.client_socket.send(message.encode(ENCODING))
+            send_to_user(user, message)
 
 def handle_server_commands(user: User, message):
     message = message[1:] # remove the slash ('/') from the message
@@ -68,6 +68,8 @@ def handle_server_commands(user: User, message):
                 request.recipient.state = MessageStates(request.request_type.value)
                 request.sender.state = MessageStates(request.request_type.value)
                 request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
+                send_to_user(request.recipient, "clear")
+                send_to_user(request.sender, "clear")
                 outgoing_requests.remove(request)
 
     elif message_tokens[0] == "ttt":
@@ -91,6 +93,7 @@ def handle_new_connection(user: User):
                 broadcast(f"{user.username}: {message}")
             elif user.state == MessageStates.PRIVATE_STATE:
                 send_to_user(user.pm_partner, f"{user.username}: {message}")
+                send_to_user(user, f"{user.username}: {message}")
         except Exception as e:
             print(e)
             try:
@@ -112,8 +115,8 @@ def receive():
         new_user = User(username, client_socket)
         participants.append(new_user)
 
-        broadcast(f"{new_user.username} has joined the chat")
-        send_to_user(new_user, f"\nWelcome {username}!")
+        broadcast(f"{new_user.username} has joined the chat\n")
+        send_to_user(new_user, f"Welcome {username}!")
 
         thread = threading.Thread(target=handle_new_connection, args=(new_user,))
         thread.start()

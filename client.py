@@ -37,7 +37,6 @@ def handle_input(scr, max_len, prefix=""):
 
     return input
 
-
 def prep_client(stdscr):
     curses.curs_set(1)
 
@@ -49,8 +48,6 @@ def prep_client(stdscr):
     max_username_len = 30
     username_input_pos = [int(height / 2) + 2, int(width / 2) - 6]
     username_input_win = curses.newwin(1, max_username_len + 1, username_input_pos[0], username_input_pos[1])
-
-    lines = ascii.title.strip().split("\n")
 
     center_text(ascii_win, ascii.title, 1)
     center_text(input_prompt_win, ascii.username_prompt, 0)
@@ -70,6 +67,8 @@ def run_client(stdscr, username):
     # Message window (all lines except the last)
     msg_win = curses.newwin(height - 1, width, 0, 0)
     msg_win.scrollok(True)  # auto-scroll when full
+    msg_win.clear()
+    msg_win.refresh()
     
     # Input window (bottom line)
     max_input_len = 90
@@ -95,7 +94,13 @@ def run_client(stdscr, username):
         while True:
             try:
                 msg = client.recv(1024).decode(ENCODING)
-                display_message(msg)
+                if msg.startswith("@"):
+                    display_message(msg[1:])
+                else:
+                    display_message(f"That started with {msg[0]}")
+                    if msg == "clear":
+                        msg_win.clear()
+
             except:
                 break
 
