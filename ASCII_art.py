@@ -13,13 +13,12 @@ title = """
   :####:  ##    ##  ########  ##    ### ##    ##   ######   ##   ###  ##:  :##  ########
 """
 
-
 username_prompt = """
-══════════════════════════════════════════════════════
-
-   Enter a username: _
-
-══════════════════════════════════════════════════════
+╔══════════════════════════════════════════════════════╗
+║                                                      ║
+║   Enter a username:                                  ║
+║                                                      ║
+╚══════════════════════════════════════════════════════╝
 """
 
 def get_private_message_invitation(username):
@@ -44,10 +43,33 @@ def get_private_message_receipt(username):
 ══════════════════════════════════════════════════════
 """
 
+user_not_found = """
+══════════════════════════════════════════════════════
+
+   Could not find anyone with that username.
+
+══════════════════════════════════════════════════════
+"""
+
 invalid_command = """
 ══════════════════════════════════════════════════════
 
    Not a valid command.
+
+══════════════════════════════════════════════════════
+"""
+
+help_message = """
+══════════════════════════════════════════════════════
+
+   Available commands:
+
+   /pm [username]   Send a private message invite
+   /ttt [username]  Challenge someone to Tic Tac Toe
+   /accept          Accept a pending invitation
+   /decline         Decline a pending invitation
+   /leave           Leave the server
+   /help            Show this message
 
 ══════════════════════════════════════════════════════
 """

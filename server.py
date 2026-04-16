@@ -8,16 +8,30 @@ SERVER_ADDRESS = (socket.gethostname(), 15662)
 
 participants = []
 
+outgoing_requests = []
+
 class MessageStates(Enum):
-    PUBLIC_MESSAGE = 1
-    PRIVATE_MESSAGE = 2
+    PUBLIC_STATE = 0
+    PRIVATE_STATE = 1
+    MINIGAME_STATE = 2
+
+class PendingStates(Enum):
+    NONE = 0
+    PRIVATE_PENDING = 1
+    MINIGAME_PENDING = 2
+
+class PendingRequest:
+    def __init__(self, request_type, sender, recipient):
+        self.request_type = request_type
+        self.sender = sender
+        self.recipient = recipient
 
 class User:
     def __init__(self, username, client_socket):
         self.username = username
         self.client_socket = client_socket
-        self.state = MessageStates.PUBLIC_MESSAGE
-        self.pending = None
+        self.state = MessageStates.PUBLIC_STATE
+        self.pm_partner = None
 
 def receive_from_user(user: User):
     print(f"Receiving message from {user.username}")
@@ -30,7 +44,7 @@ def send_to_user(user: User, message):
 def broadcast(message):
     print(f"Broadcasting {message}")
     for user in participants:
-        if user.state == MessageStates.PUBLIC_MESSAGE:
+        if user.state == MessageStates.PUBLIC_STATE:
             user.client_socket.send(message.encode(ENCODING))
 
 def handle_server_commands(user: User, message):
@@ -42,10 +56,30 @@ def handle_server_commands(user: User, message):
             if message_tokens[1] == participants[i].username:
                 send_to_user(participants[i], ascii.get_private_message_invitation(user.username))
                 send_to_user(user, ascii.get_private_message_receipt(participants[i].username))
+
+                outgoing_requests.append(PendingRequest(PendingStates.PRIVATE_PENDING, user, participants[i]))
+                break
+        else:
+            send_to_user(user, ascii.user_not_found)
+
+    elif message_tokens[0] == "accept":
+        for request in outgoing_requests:
+            if request.recipient == user:
+                request.recipient.state = MessageStates(request.request_type.value)
+                request.sender.state = MessageStates(request.request_type.value)
+                request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
+                outgoing_requests.remove(request)
+
+    elif message_tokens[0] == "ttt":
+        for i in range(0, len(participants)):
+            if message_tokens[1] == participants[i].username:
+                pass # ascii stuff and state management stuff goes here
+
+    elif message_tokens[0] == "help":
+        send_to_user(user, ascii.help_message)
+
     else:
         send_to_user(user, ascii.invalid_command)
-
-
 
 def handle_new_connection(user: User):
     while True:
@@ -53,8 +87,10 @@ def handle_new_connection(user: User):
             message = receive_from_user(user)
             if message.startswith("/"):
                 handle_server_commands(user, message)
-            else:
+            elif user.state == MessageStates.PUBLIC_STATE:
                 broadcast(f"{user.username}: {message}")
+            elif user.state == MessageStates.PRIVATE_STATE:
+                send_to_user(user.pm_partner, f"{user.username}: {message}")
         except Exception as e:
             print(e)
             try:
