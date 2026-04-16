@@ -15,9 +15,39 @@ title = """
 
 
 username_prompt = """
-╔══════════════════════════════════════════════════════╗
-║                                                      ║
-║   Enter a username:                                  ║
-║                                                      ║
-╚══════════════════════════════════════════════════════╝
+══════════════════════════════════════════════════════
+
+   Enter a username: _
+
+══════════════════════════════════════════════════════
+"""
+
+def get_private_message_invitation(username):
+    return f"""
+══════════════════════════════════════════════════════
+
+   {username} has invited you to privately message.
+
+   Type /accept to accept
+   Type /decline to decline
+
+══════════════════════════════════════════════════════
+    """
+
+def get_private_message_receipt(username):
+    return f"""
+══════════════════════════════════════════════════════
+
+   You invited {username} to privately message.
+   Waiting for their response...
+
+══════════════════════════════════════════════════════
+"""
+
+invalid_command = """
+══════════════════════════════════════════════════════
+
+   Not a valid command.
+
+══════════════════════════════════════════════════════
 """

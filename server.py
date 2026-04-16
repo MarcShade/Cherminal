@@ -1,21 +1,23 @@
 import threading
 import socket
-
-# ANSI escape codes:
-# \033[2J - clear the entire screen
-# \033[H - move cursor to top left
-# \033[A - Move cursor up one line
-# \033[K - Clear from cursor to end of line
+from enum import Enum
+import ASCII_art as ascii
 
 ENCODING = 'utf-8'
 SERVER_ADDRESS = (socket.gethostname(), 15662)
 
 participants = []
 
+class MessageStates(Enum):
+    PUBLIC_MESSAGE = 1
+    PRIVATE_MESSAGE = 2
+
 class User:
     def __init__(self, username, client_socket):
         self.username = username
         self.client_socket = client_socket
+        self.state = MessageStates.PUBLIC_MESSAGE
+        self.pending = None
 
 def receive_from_user(user: User):
     print(f"Receiving message from {user.username}")
@@ -28,13 +30,31 @@ def send_to_user(user: User, message):
 def broadcast(message):
     print(f"Broadcasting {message}")
     for user in participants:
-        user.client_socket.send(message.encode(ENCODING))
+        if user.state == MessageStates.PUBLIC_MESSAGE:
+            user.client_socket.send(message.encode(ENCODING))
+
+def handle_server_commands(user: User, message):
+    message = message[1:] # remove the slash ('/') from the message
+    message_tokens = message.split(" ")
+
+    if message_tokens[0] == "pm":
+        for i in range(0, len(participants)):
+            if message_tokens[1] == participants[i].username:
+                send_to_user(participants[i], ascii.get_private_message_invitation(user.username))
+                send_to_user(user, ascii.get_private_message_receipt(participants[i].username))
+    else:
+        send_to_user(user, ascii.invalid_command)
+
+
 
 def handle_new_connection(user: User):
     while True:
         try:
             message = receive_from_user(user)
-            broadcast(f"{user.username}: {message}")
+            if message.startswith("/"):
+                handle_server_commands(user, message)
+            else:
+                broadcast(f"{user.username}: {message}")
         except Exception as e:
             print(e)
             try:

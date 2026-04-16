@@ -9,7 +9,6 @@ ENCODING = "utf-8"
 print_lock = threading.Lock()
 curses_lock = threading.Lock()
 
-
 def center_text(scr, text, start_y = 0):
     height, width = scr.getmaxyx()
     lines = text.strip().split("\n")
@@ -50,8 +49,6 @@ def prep_client(stdscr):
     max_username_len = 30
     username_input_pos = [int(height / 2) + 2, int(width / 2) - 6]
     username_input_win = curses.newwin(1, max_username_len + 1, username_input_pos[0], username_input_pos[1])
-
-    lines = ascii.title.strip().split("\n")
 
     center_text(ascii_win, ascii.title, 1)
     center_text(input_prompt_win, ascii.username_prompt, 0)
@@ -116,7 +113,7 @@ def run_client(stdscr, username):
             input_win.clear()  # wipe whatever is left in the buffer. I can't get shit to work without this here for some reason.
             input_win.refresh()
 
-        if msg == "/leave":
+        if msg == "/leave": # this sort of has to be here I think
             break
 
         client.send(msg.encode(ENCODING))
