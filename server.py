@@ -7,10 +7,6 @@ from collections import deque
 ENCODING = 'utf-8'
 SERVER_ADDRESS = (socket.gethostname(), 15662)
 
-participants = []
-
-outgoing_requests = []
-
 messages = deque(maxlen=1000)  # Caps the amount of messages being saved on the server.
 
 class MessageStates(Enum):
@@ -36,6 +32,10 @@ class PendingRequest:
         self.request_type = request_type
         self.sender = sender
         self.recipient = recipient
+
+participants: list[User] = []
+
+outgoing_requests: list[PendingRequest] = []
 
 def receive_from_user(user: User):
     print(f"Receiving message from {user.username}")
@@ -72,32 +72,48 @@ def handle_server_commands(user: User, message: str):
         if message_tokens[0] == "accept":
             for request in outgoing_requests:
                 if request.recipient == user:
-                    request.recipient.state = MessageStates(request.request_type.value)
-                    request.sender.state = MessageStates(request.request_type.value)
-                    request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
+                    if request.request_type == PendingStates.PRIVATE_PENDING:
+                        request.recipient.state = MessageStates(request.request_type.value)
+                        request.sender.state = MessageStates(request.request_type.value)
+                        # request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
 
-                    send_to_user_raw(request.recipient, "clear")
-                    send_to_user_raw(request.sender, "clear")
+                        send_to_user_raw(request.recipient, "clear")
+                        send_to_user_raw(request.sender, "clear")
 
-                    send_to_user(request.recipient, ascii.get_pm_conversation_started(request.sender.username))
-                    send_to_user(request.sender, ascii.get_pm_conversation_started(request.sender.username))
+                        send_to_user(request.recipient, ascii.get_pm_conversation_started(request.sender.username))
+                        send_to_user(request.sender, ascii.get_pm_conversation_started(request.sender.username))
 
-                    outgoing_requests.remove(request)
-                    break
+                        outgoing_requests.remove(request)
+                        break
+                    elif request.request_type == PendingStates.MINIGAME_PENDING:
+                        request.recipient.state = MessageStates(request.request_type.value)
+                        request.sender.state = MessageStates(request.request_type.value)
+
+                        send_to_user_raw(request.recipient, "clear")
+                        send_to_user_raw(request.sender, "clear")
+
+                        outgoing_requests.remove(request)
+                        break
+
             else:
                 send_to_user(user, ascii.no_invitation_to_accept)
 
         elif message_tokens[0] == "decline":
             for request in outgoing_requests:
                 if request.recipient == user:
-                    # TODO: Is it necessary to do anything with the states if nothing happens? Don't think so. Will check up on this.
-                    request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
+                    if request.request_type == PendingStates.PRIVATE_PENDING:
+                        send_to_user(request.recipient, ascii.get_incoming_pm_request_declined(request.sender.username))
+                        send_to_user(request.sender, ascii.get_outgoing_pm_request_declined(request.recipient.username))
 
-                    send_to_user(request.recipient, ascii.get_incoming_pm_request_declined(user.username))
-                    send_to_user(request.sender, ascii.get_outgoing_pm_request_declined(user.username))
+                        outgoing_requests.remove(request)
+                        break
 
-                    outgoing_requests.remove(request)
-                    break
+                    elif request.request_type == PendingStates.MINIGAME_PENDING:
+                        send_to_user(request.recipient, ascii.get_tictactoe_invitation_declined_incoming(request.sender.username))
+                        send_to_user(request.sender, ascii.get_tictactoe_invitation_declined_outgoing(request.recipient.username))
+
+                        outgoing_requests.remove(request)
+                        break
             else:
                 send_to_user(user, ascii.no_invitation_to_decline)
 
@@ -121,9 +137,14 @@ def handle_server_commands(user: User, message: str):
                 pass # Not yet implemented
             else:
                 send_to_user(user, ascii.no_session_to_leave)
+        else:
+            send_to_user(user, ascii.invalid_command)
 
     elif len(message_tokens) == 2:
         if message_tokens[0] == "pm":
+            if message_tokens[1] == user.username:
+                send_to_user(user, ascii.cannot_invite_self_pm)
+                return
             for i in range(0, len(participants)):
                 if message_tokens[1] == participants[i].username:
                     send_to_user(participants[i], ascii.get_private_message_invitation(user.username))
@@ -135,10 +156,17 @@ def handle_server_commands(user: User, message: str):
                 send_to_user(user, ascii.user_not_found)
 
         elif message_tokens[0] == "ttt":
+            if message_tokens[1] == user.username:
+                send_to_user(user, ascii.cannot_invite_self_ttt)
+                return
             for i in range(0, len(participants)):
                 if message_tokens[1] == participants[i].username:
-                    pass # ascii stuff and state management stuff goes here
+                    send_to_user(participants[i], ascii.get_tictactoe_invitation(user.username))
+                    send_to_user(user, ascii.get_tictactoe_receipt(participants[i].username))
 
+                    outgoing_requests.append(PendingRequest(PendingStates.MINIGAME_PENDING, user, participants[i]))
+        else:
+            send_to_user(user, ascii.invalid_command)
     else:
         send_to_user(user, ascii.invalid_command)
 

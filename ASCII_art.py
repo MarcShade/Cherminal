@@ -126,3 +126,62 @@ no_session_to_leave = f"""
 
 ══════════════════════════════════════════════════════
 """
+
+def get_tictactoe_invitation(username: str):
+    return f"""
+══════════════════════════════════════════════════════
+
+   {username} has invited you to play TicTacToe!
+
+   Type /accept to accept
+   Type /decline to decline
+
+══════════════════════════════════════════════════════
+"""
+
+def get_tictactoe_receipt(username: str):
+    return f"""
+══════════════════════════════════════════════════════
+
+   You have invited {username} to play TicTacToe!
+
+   Waiting for them to accept or decline...
+
+══════════════════════════════════════════════════════
+"""
+
+def get_tictactoe_invitation_declined_outgoing(username: str):
+    return f"""
+══════════════════════════════════════════════════════
+
+   {username} has declined your invitation
+   to play TicTacToe.
+
+══════════════════════════════════════════════════════
+"""
+
+def get_tictactoe_invitation_declined_incoming(username: str):
+    return f"""
+══════════════════════════════════════════════════════
+
+   You have declined {username}'s invitation
+   to play TicTacToe.
+
+══════════════════════════════════════════════════════
+"""
+
+cannot_invite_self_pm = f"""
+══════════════════════════════════════════════════════
+
+   You cannot invite yourself to a private message.
+
+══════════════════════════════════════════════════════
+"""
+
+cannot_invite_self_ttt = f"""
+══════════════════════════════════════════════════════
+
+   You cannot invite yourself to a TicTacToe game.
+
+══════════════════════════════════════════════════════
+"""
