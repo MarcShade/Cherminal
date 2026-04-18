@@ -102,3 +102,27 @@ def get_pm_conversation_started(username: str):
 
 ══════════════════════════════════════════════════════
 """
+
+no_invitation_to_accept = f"""
+══════════════════════════════════════════════════════
+
+   You have no pending invitations to accept.
+
+══════════════════════════════════════════════════════
+"""
+
+no_invitation_to_decline = f"""
+══════════════════════════════════════════════════════
+
+   You have no pending invitations to decline.
+
+══════════════════════════════════════════════════════
+"""
+
+no_session_to_leave = f"""
+══════════════════════════════════════════════════════
+
+   You are not currently in a session to leave.
+
+══════════════════════════════════════════════════════
+"""

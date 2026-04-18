@@ -83,6 +83,9 @@ def handle_server_commands(user: User, message: str):
                     send_to_user(request.sender, ascii.get_pm_conversation_started(request.sender.username))
 
                     outgoing_requests.remove(request)
+                    break
+            else:
+                send_to_user(user, ascii.no_invitation_to_accept)
 
         elif message_tokens[0] == "decline":
             for request in outgoing_requests:
@@ -94,6 +97,9 @@ def handle_server_commands(user: User, message: str):
                     send_to_user(request.sender, ascii.get_outgoing_pm_request_declined(user.username))
 
                     outgoing_requests.remove(request)
+                    break
+            else:
+                send_to_user(user, ascii.no_invitation_to_decline)
 
         elif message_tokens[0] == "quit":
             send_to_user_raw(user, "quit")
@@ -111,6 +117,10 @@ def handle_server_commands(user: User, message: str):
 
                 load_previous_messages(user)
                 load_previous_messages(user.pm_partner)
+            elif user.state == MessageStates.MINIGAME_STATE:
+                pass # Not yet implemented
+            else:
+                send_to_user(user, ascii.no_session_to_leave)
 
     elif len(message_tokens) == 2:
         if message_tokens[0] == "pm":
