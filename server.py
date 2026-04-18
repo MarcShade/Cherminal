@@ -2,6 +2,7 @@ import threading
 import socket
 from enum import Enum
 import ASCII_art as ascii
+from collections import deque
 
 ENCODING = 'utf-8'
 SERVER_ADDRESS = (socket.gethostname(), 15662)
@@ -10,7 +11,7 @@ participants = []
 
 outgoing_requests = []
 
-messages = []
+messages = deque(maxlen=1000)  # Caps the amount of messages being saved on the server.
 
 class MessageStates(Enum):
     PUBLIC_STATE = 0
