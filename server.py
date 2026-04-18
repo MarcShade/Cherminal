@@ -68,65 +68,66 @@ def handle_server_commands(user: User, message: str):
     message = message[1:] # remove the slash ('/') from the message
     message_tokens = message.split(" ")
 
-    if message_tokens[0] == "pm":
-        for i in range(0, len(participants)):
-            if message_tokens[1] == participants[i].username:
-                send_to_user(participants[i], ascii.get_private_message_invitation(user.username))
-                send_to_user(user, ascii.get_private_message_receipt(participants[i].username))
+    if len(message_tokens) == 1:
+        if message_tokens[0] == "accept":
+            for request in outgoing_requests:
+                if request.recipient == user:
+                    request.recipient.state = MessageStates(request.request_type.value)
+                    request.sender.state = MessageStates(request.request_type.value)
+                    request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
 
-                outgoing_requests.append(PendingRequest(PendingStates.PRIVATE_PENDING, user, participants[i]))
-                break
-        else:
-            send_to_user(user, ascii.user_not_found)
+                    send_to_user_raw(request.recipient, "clear")
+                    send_to_user_raw(request.sender, "clear")
 
-    elif message_tokens[0] == "accept":
-        for request in outgoing_requests:
-            if request.recipient == user:
-                request.recipient.state = MessageStates(request.request_type.value)
-                request.sender.state = MessageStates(request.request_type.value)
-                request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
+                    send_to_user(request.recipient, ascii.get_pm_conversation_started(request.sender.username))
+                    send_to_user(request.sender, ascii.get_pm_conversation_started(request.sender.username))
 
-                send_to_user_raw(request.recipient, "clear")
-                send_to_user_raw(request.sender, "clear")
+                    outgoing_requests.remove(request)
 
-                send_to_user(request.recipient, ascii.get_pm_conversation_started(request.sender.username))
-                send_to_user(request.sender, ascii.get_pm_conversation_started(request.sender.username))
+        elif message_tokens[0] == "decline":
+            for request in outgoing_requests:
+                if request.recipient == user:
+                    # TODO: Is it necessary to do anything with the states if nothing happens? Don't think so. Will check up on this.
+                    request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
 
-                outgoing_requests.remove(request)
+                    send_to_user(request.recipient, ascii.get_incoming_pm_request_declined(user.username))
+                    send_to_user(request.sender, ascii.get_outgoing_pm_request_declined(user.username))
 
-    elif message_tokens[0] == "decline":
-        for request in outgoing_requests:
-            if request.recipient == user:
-                # TODO: Is it necessary to do anything with the states if nothing happens? Don't think so. Will check up on this.
-                request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
+                    outgoing_requests.remove(request)
 
-                send_to_user(request.recipient, ascii.get_incoming_pm_request_declined(user.username))
-                send_to_user(request.sender, ascii.get_outgoing_pm_request_declined(user.username))
+        elif message_tokens[0] == "quit":
+            send_to_user_raw(user, "quit")
 
-                outgoing_requests.remove(request)
+        elif message_tokens[0] == "help":
+            send_to_user(user, ascii.help_message)
 
+        elif message_tokens[0] == "leave":
+            if user.state == MessageStates.PRIVATE_STATE:
+                send_to_user_raw(user, "clear")
+                send_to_user_raw(user.pm_partner, "clear")
 
-    elif message_tokens[0] == "quit":
-        send_to_user_raw(user, "quit")
+                user.state = MessageStates.PUBLIC_STATE
+                user.pm_partner.state = MessageStates.PUBLIC_STATE
 
-    elif message_tokens[0] == "ttt":
-        for i in range(0, len(participants)):
-            if message_tokens[1] == participants[i].username:
-                pass # ascii stuff and state management stuff goes here
+                load_previous_messages(user)
+                load_previous_messages(user.pm_partner)
 
-    elif message_tokens[0] == "help":
-        send_to_user(user, ascii.help_message)
+    elif len(message_tokens) == 2:
+        if message_tokens[0] == "pm":
+            for i in range(0, len(participants)):
+                if message_tokens[1] == participants[i].username:
+                    send_to_user(participants[i], ascii.get_private_message_invitation(user.username))
+                    send_to_user(user, ascii.get_private_message_receipt(participants[i].username))
 
-    elif message_tokens[0] == "leave":
-        if user.state == MessageStates.PRIVATE_STATE:
-            send_to_user_raw(user, "clear")
-            send_to_user_raw(user.pm_partner, "clear")
+                    outgoing_requests.append(PendingRequest(PendingStates.PRIVATE_PENDING, user, participants[i]))
+                    break
+            else:
+                send_to_user(user, ascii.user_not_found)
 
-            user.state = MessageStates.PUBLIC_STATE
-            user.pm_partner.state = MessageStates.PUBLIC_STATE
-
-            load_previous_messages(user)
-            load_previous_messages(user.pm_partner)
+        elif message_tokens[0] == "ttt":
+            for i in range(0, len(participants)):
+                if message_tokens[1] == participants[i].username:
+                    pass # ascii stuff and state management stuff goes here
 
     else:
         send_to_user(user, ascii.invalid_command)
