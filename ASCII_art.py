@@ -65,11 +65,40 @@ help_message = """
    Available commands:
 
    /pm [username]   Send a private message invite
-   /ttt [username]  Challenge someone to Tic Tac Toe
    /accept          Accept a pending invitation
    /decline         Decline a pending invitation
-   /leave           Leave the server
+   /leave           Leave the private message session
+   /quit            Quit the program
    /help            Show this message
+
+══════════════════════════════════════════════════════
+"""
+
+def get_outgoing_pm_request_declined(username):
+    return f"""
+══════════════════════════════════════════════════════
+
+   {username} has declined your private message request.
+
+══════════════════════════════════════════════════════
+"""
+
+def get_incoming_pm_request_declined(username):
+    return f"""
+══════════════════════════════════════════════════════
+
+   You have declined the private message request
+   from {username}.
+
+══════════════════════════════════════════════════════
+"""
+
+def get_pm_conversation_started(username):
+    return f"""
+══════════════════════════════════════════════════════
+
+   You are now in a private conversation with {username}.
+   Type /leave to return to the public chat.
 
 ══════════════════════════════════════════════════════
 """

@@ -9,6 +9,9 @@ ENCODING = "utf-8"
 print_lock = threading.Lock()
 curses_lock = threading.Lock()
 
+running = True
+
+
 def center_text(scr, text, start_y = 0):
     height, width = scr.getmaxyx()
     lines = text.strip().split("\n")
@@ -91,6 +94,7 @@ def run_client(stdscr, username):
             msg_win.refresh()
 
     def receive_message(client):
+        global running
         while True:
             try:
                 msg = client.recv(1024).decode(ENCODING)
@@ -99,7 +103,7 @@ def run_client(stdscr, username):
                     # display_message("You see that? That's an '@'. I'm gonna be taking that away from you now")
                     display_message(msg[1:])
                 else:
-                    display_message(f"Now that's interesting. That started with a {msg[0]}. That must mean it's a server command")
+                    # display_message(f"Now that's interesting. That started with a {msg[0]}. That must mean it's a server command")
                     if msg == "clear":
                         msg_win.clear()
                         msg_win.refresh()
@@ -109,7 +113,7 @@ def run_client(stdscr, username):
     thread = threading.Thread(target=receive_message, args=(client,), daemon=True)
     thread.start()
 
-    while True:
+    while running:
         with curses_lock:
             input_win.clear()
             prompt = f"{username}: "
@@ -118,12 +122,12 @@ def run_client(stdscr, username):
 
         msg = handle_input(input_win, max_input_len, prompt)
 
+        if msg == "/quit": # This has to be here :(
+            break
+
         with curses_lock:
             input_win.clear()  # wipe whatever is left in the buffer. I can't get shit to work without this here for some reason.
             input_win.refresh()
-
-        if msg == "/leave":
-            break
 
         client.send(msg.encode(ENCODING))
 

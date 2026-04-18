@@ -11,6 +11,8 @@ participants = []
 
 outgoing_requests = []
 
+messages = []
+
 class MessageStates(Enum):
     PUBLIC_STATE = 0
     PRIVATE_STATE = 1
@@ -48,9 +50,18 @@ def send_to_user(user: User, message):
 
 def broadcast(message):
     print(f"Broadcasting {message}")
+    messages.append(message + "\n")
     for user in participants:
         if user.state == MessageStates.PUBLIC_STATE:
             send_to_user(user, message)
+
+def load_previous_messages(user):
+    all_messages = ""
+    for msg in messages:
+        all_messages += msg
+
+    all_messages = all_messages[:-1] #Remove the last character of the string, which will always be a '\n'. Looks can easily deceive, because this is one single character, even though it looks like two!
+    send_to_user(user, all_messages)
 
 def handle_server_commands(user: User, message):
     message = message[1:] # remove the slash ('/') from the message
@@ -73,9 +84,29 @@ def handle_server_commands(user: User, message):
                 request.recipient.state = MessageStates(request.request_type.value)
                 request.sender.state = MessageStates(request.request_type.value)
                 request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
+
                 send_to_user_raw(request.recipient, "clear")
                 send_to_user_raw(request.sender, "clear")
+
+                send_to_user(request.recipient, ascii.get_pm_conversation_started(request.sender.username))
+                send_to_user(request.sender, ascii.get_pm_conversation_started(request.sender.username))
+
                 outgoing_requests.remove(request)
+
+    elif message_tokens[0] == "decline":
+        for request in outgoing_requests:
+            if request.recipient == user:
+                # TODO: Is it necessary to do anything with the states if nothing happens? Don't think so. Will check up on this.
+                request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
+
+                send_to_user(request.recipient, ascii.get_incoming_pm_request_declined(user.username))
+                send_to_user(request.sender, ascii.get_outgoing_pm_request_declined(user.username))
+
+                outgoing_requests.remove(request)
+
+
+    elif message_tokens[0] == "quit":
+        send_to_user_raw(user, "quit")
 
     elif message_tokens[0] == "ttt":
         for i in range(0, len(participants)):
@@ -84,6 +115,17 @@ def handle_server_commands(user: User, message):
 
     elif message_tokens[0] == "help":
         send_to_user(user, ascii.help_message)
+
+    elif message_tokens[0] == "leave":
+        if user.state == MessageStates.PRIVATE_STATE:
+            send_to_user_raw(user, "clear")
+            send_to_user_raw(user.pm_partner, "clear")
+
+            user.state = MessageStates.PUBLIC_STATE
+            user.pm_partner.state = MessageStates.PUBLIC_STATE
+
+            load_previous_messages(user)
+            load_previous_messages(user.pm_partner)
 
     else:
         send_to_user(user, ascii.invalid_command)
@@ -118,11 +160,10 @@ def receive():
         print(f" with username {username}")
 
         new_user = User(username, client_socket)
-        participants.append(new_user)
 
         broadcast(f"{new_user.username} has joined the chat")
-        sleep(0.1) # If this isn't delayed, our software breaks.
-        send_to_user(new_user, f"Welcome {username}!")
+        load_previous_messages(new_user)
+        participants.append(new_user)
 
         thread = threading.Thread(target=handle_new_connection, args=(new_user,))
         thread.start()
