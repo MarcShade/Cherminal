@@ -2,6 +2,7 @@ import threading
 import socket
 from enum import Enum
 import ASCII_art as ascii
+from time import sleep
 
 ENCODING = 'utf-8'
 SERVER_ADDRESS = (socket.gethostname(), 15662)
@@ -37,6 +38,10 @@ def receive_from_user(user: User):
     print(f"Receiving message from {user.username}")
     return user.client_socket.recv(1024).decode(ENCODING)
 
+def send_to_user_raw(user: User, message):
+    print(f"Sent raw message {message} to {user.username}")
+    return user.client_socket.send(message.encode(ENCODING))
+
 def send_to_user(user: User, message):
     print(f"Sent {message} to {user.username}")
     return user.client_socket.send(f"@{message}".encode(ENCODING))
@@ -68,8 +73,8 @@ def handle_server_commands(user: User, message):
                 request.recipient.state = MessageStates(request.request_type.value)
                 request.sender.state = MessageStates(request.request_type.value)
                 request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
-                send_to_user(request.recipient, "clear")
-                send_to_user(request.sender, "clear")
+                send_to_user_raw(request.recipient, "clear")
+                send_to_user_raw(request.sender, "clear")
                 outgoing_requests.remove(request)
 
     elif message_tokens[0] == "ttt":
@@ -115,7 +120,8 @@ def receive():
         new_user = User(username, client_socket)
         participants.append(new_user)
 
-        broadcast(f"{new_user.username} has joined the chat\n")
+        broadcast(f"{new_user.username} has joined the chat")
+        sleep(0.1) # If this isn't delayed, our software breaks.
         send_to_user(new_user, f"Welcome {username}!")
 
         thread = threading.Thread(target=handle_new_connection, args=(new_user,))
