@@ -185,3 +185,54 @@ cannot_invite_self_ttt = f"""
 
 ══════════════════════════════════════════════════════
 """
+
+def get_tictactoe_board(board: list[int], username: str, winner: str = ""):
+    X = [
+        "X   X",
+        " X X ",
+        "  X  ",
+        " X X ",
+        "X   X",
+    ]
+
+    O = [
+        " OOO ",
+        "O   O",
+        "O   O",
+        "O   O",
+        " OOO ",
+    ]
+
+    EMPTY = [
+        "     ",
+        "     ",
+        "     ",
+        "     ",
+        "     ",
+    ]
+
+    symbols = {1: X, 2: O, 0: EMPTY}
+
+    def render_row(row_index):
+        cells = [symbols[board[row_index * 3 + col]] for col in range(3)]
+        lines = [f" {cells[0][i]} │ {cells[1][i]} │ {cells[2][i]} " for i in range(5)]
+        return "\n".join(lines)
+
+    divider = "───────┼───────┼───────"
+
+    status = f"  It is {username}'s turn" if winner == "" else f"  {winner} has won!"
+
+    return f"""
+════════════════════════
+
+  TicTacToe
+{status}
+
+{render_row(0)}
+{divider}
+{render_row(1)}
+{divider}
+{render_row(2)}
+
+════════════════════════
+"""

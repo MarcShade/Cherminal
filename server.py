@@ -3,6 +3,7 @@ import socket
 from enum import Enum
 import ASCII_art as ascii
 from collections import deque
+from TIcTacToe import TicTacToe as ttt
 
 ENCODING = 'utf-8'
 SERVER_ADDRESS = (socket.gethostname(), 15662)
@@ -36,6 +37,8 @@ class PendingRequest:
 participants: list[User] = []
 
 outgoing_requests: list[PendingRequest] = []
+
+ongoing_games: list[ttt] = []
 
 def receive_from_user(user: User):
     print(f"Receiving message from {user.username}")
@@ -75,7 +78,7 @@ def handle_server_commands(user: User, message: str):
                     if request.request_type == PendingStates.PRIVATE_PENDING:
                         request.recipient.state = MessageStates(request.request_type.value)
                         request.sender.state = MessageStates(request.request_type.value)
-                        # request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
+                        request.sender.pm_partner, request.recipient.pm_partner = (request.recipient, request.sender)
 
                         send_to_user_raw(request.recipient, "clear")
                         send_to_user_raw(request.sender, "clear")
@@ -93,6 +96,11 @@ def handle_server_commands(user: User, message: str):
                         send_to_user_raw(request.sender, "clear")
 
                         outgoing_requests.remove(request)
+
+                        ongoing_games.append(ttt(request.sender, request.recipient, len(ongoing_games)))
+                        send_to_user(request.recipient, ascii.get_tictactoe_board(ongoing_games[len(ongoing_games) - 1].board, ongoing_games[len(ongoing_games) - 1].player_1.username))
+                        send_to_user(request.sender, ascii.get_tictactoe_board(ongoing_games[len(ongoing_games) - 1].board, ongoing_games[len(ongoing_games) - 1].player_1.username))
+
                         break
 
             else:
@@ -134,7 +142,9 @@ def handle_server_commands(user: User, message: str):
                 load_previous_messages(user)
                 load_previous_messages(user.pm_partner)
             elif user.state == MessageStates.MINIGAME_STATE:
-                pass # Not yet implemented
+                send_to_user_raw(user, "clear")
+                user.state = MessageStates.PUBLIC_STATE
+                load_previous_messages(user)
             else:
                 send_to_user(user, ascii.no_session_to_leave)
         else:
@@ -165,10 +175,36 @@ def handle_server_commands(user: User, message: str):
                     send_to_user(user, ascii.get_tictactoe_receipt(participants[i].username))
 
                     outgoing_requests.append(PendingRequest(PendingStates.MINIGAME_PENDING, user, participants[i]))
+                    break
+            else:
+                send_to_user(user, ascii.user_not_found)
         else:
             send_to_user(user, ascii.invalid_command)
     else:
         send_to_user(user, ascii.invalid_command)
+
+def handle_game_message(user: User, message: str):
+    for game in ongoing_games:
+        if user in game.players:
+            if game.players[game.turn] == user:
+                try:
+                    msg = int(message)
+                except ValueError:
+                    return
+
+                if msg >= 1 or msg <= 9:
+                    game.move(msg-1)
+                    send_to_user_raw(game.player_1, "clear")
+                    send_to_user_raw(game.player_2, "clear")
+
+                    winner_username = game.players[game.winner % 2].username if game.winner != 0 else ""
+                    send_to_user(game.player_1, str(game.winner))
+                    send_to_user(game.player_1, ascii.get_tictactoe_board(game.board, game.players[game.turn].username, winner_username))
+                    send_to_user(game.player_2, ascii.get_tictactoe_board(game.board, game.players[game.turn].username, winner_username))
+
+                    if winner_username != "":
+                        broadcast(f"*** {winner_username} has won a game of TicTacToe against {game.players[game.winner - 1].username}! ***")
+
 
 def handle_new_connection(user: User):
     while True:
@@ -181,6 +217,8 @@ def handle_new_connection(user: User):
             elif user.state == MessageStates.PRIVATE_STATE:
                 send_to_user(user.pm_partner, f"{user.username}: {message}")
                 send_to_user(user, f"{user.username}: {message}")
+            elif user.state == MessageStates.MINIGAME_STATE:
+                handle_game_message(user, message)
         except Exception as e:
             print(e)
             try:

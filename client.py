@@ -94,15 +94,20 @@ def run_client(stdscr, username: str):
         while True:
             try:
                 msg = client.recv(1024).decode(ENCODING)
-                # display_message(f"A message is incoming! It says \"{msg}\".")
+                # A message is incoming!
                 if msg.startswith("@"):
-                    # display_message("You see that? That's an '@'. I'm gonna be taking that away from you now")
+                    # You see that? That's an '@'. I'm gonna be taking that away from you now
                     display_message(msg[1:])
                 else:
-                    # display_message(f"Now that's interesting. That started with a {msg[0]}. That must mean it's a server command")
-                    if msg == "clear":
+                    # Now that's interesting. That did not start with an @. That must mean it's a server command
+                    msg: list[str] = msg.split(" ")
+                    if msg[0] == "clear":
                         msg_win.clear()
                         msg_win.refresh()
+                    if msg[0] == "center":
+                        center_text(msg_win, msg[1])
+                        msg_win.refresh()
+
             except:
                 break
 
