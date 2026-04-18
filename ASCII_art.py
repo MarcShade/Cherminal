@@ -21,7 +21,7 @@ username_prompt = """
 ╚══════════════════════════════════════════════════════╝
 """
 
-def get_private_message_invitation(username):
+def get_private_message_invitation(username: str):
     return f"""
 ══════════════════════════════════════════════════════
 
@@ -33,7 +33,7 @@ def get_private_message_invitation(username):
 ══════════════════════════════════════════════════════
     """
 
-def get_private_message_receipt(username):
+def get_private_message_receipt(username: str):
     return f"""
 ══════════════════════════════════════════════════════
 
@@ -74,7 +74,7 @@ help_message = """
 ══════════════════════════════════════════════════════
 """
 
-def get_outgoing_pm_request_declined(username):
+def get_outgoing_pm_request_declined(username: str):
     return f"""
 ══════════════════════════════════════════════════════
 
@@ -83,7 +83,7 @@ def get_outgoing_pm_request_declined(username):
 ══════════════════════════════════════════════════════
 """
 
-def get_incoming_pm_request_declined(username):
+def get_incoming_pm_request_declined(username: str):
     return f"""
 ══════════════════════════════════════════════════════
 
@@ -93,7 +93,7 @@ def get_incoming_pm_request_declined(username):
 ══════════════════════════════════════════════════════
 """
 
-def get_pm_conversation_started(username):
+def get_pm_conversation_started(username: str):
     return f"""
 ══════════════════════════════════════════════════════
 

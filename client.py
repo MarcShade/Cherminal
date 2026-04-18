@@ -12,7 +12,7 @@ curses_lock = threading.Lock()
 running = True
 
 
-def center_text(scr, text, start_y = 0):
+def center_text(scr, text: str, start_y: int = 0):
     height, width = scr.getmaxyx()
     lines = text.strip().split("\n")
     for i, line in enumerate(lines):
@@ -21,7 +21,7 @@ def center_text(scr, text, start_y = 0):
         if 0 <= y < height:
             scr.addstr(y, x, line)
 
-def handle_input(scr, max_len, prefix=""):
+def handle_input(scr, max_len: int, prefix: str = ""):
     input = ""
 
     while True:
@@ -61,7 +61,7 @@ def prep_client(stdscr):
 
     return username
 
-def run_client(stdscr, username):
+def run_client(stdscr, username: str):
     curses.curs_set(1)
     stdscr.nodelay(False)
 
@@ -84,16 +84,12 @@ def run_client(stdscr, username):
 
     client.send(username.encode(ENCODING))
 
-    curses_lock = threading.Lock()
-
-    messages = []
-
-    def display_message(msg):
+    def display_message(msg: str):
         with curses_lock:
             msg_win.addstr(msg + "\n")
             msg_win.refresh()
 
-    def receive_message(client):
+    def receive_message(client: socket.socket):
         global running
         while True:
             try:

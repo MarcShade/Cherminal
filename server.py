@@ -2,7 +2,6 @@ import threading
 import socket
 from enum import Enum
 import ASCII_art as ascii
-from time import sleep
 
 ENCODING = 'utf-8'
 SERVER_ADDRESS = (socket.gethostname(), 15662)
@@ -23,11 +22,6 @@ class PendingStates(Enum):
     PRIVATE_PENDING = 1
     MINIGAME_PENDING = 2
 
-class PendingRequest:
-    def __init__(self, request_type, sender, recipient):
-        self.request_type = request_type
-        self.sender = sender
-        self.recipient = recipient
 
 class User:
     def __init__(self, username, client_socket):
@@ -36,26 +30,32 @@ class User:
         self.state = MessageStates.PUBLIC_STATE
         self.pm_partner = None
 
+class PendingRequest:
+    def __init__(self, request_type: PendingStates, sender: User, recipient: User):
+        self.request_type = request_type
+        self.sender = sender
+        self.recipient = recipient
+
 def receive_from_user(user: User):
     print(f"Receiving message from {user.username}")
     return user.client_socket.recv(1024).decode(ENCODING)
 
-def send_to_user_raw(user: User, message):
+def send_to_user_raw(user: User, message: str):
     print(f"Sent raw message {message} to {user.username}")
     return user.client_socket.send(message.encode(ENCODING))
 
-def send_to_user(user: User, message):
+def send_to_user(user: User, message: str):
     print(f"Sent {message} to {user.username}")
     return user.client_socket.send(f"@{message}".encode(ENCODING))
 
-def broadcast(message):
+def broadcast(message: str):
     print(f"Broadcasting {message}")
     messages.append(message + "\n")
     for user in participants:
         if user.state == MessageStates.PUBLIC_STATE:
             send_to_user(user, message)
 
-def load_previous_messages(user):
+def load_previous_messages(user: User):
     all_messages = ""
     for msg in messages:
         all_messages += msg
@@ -63,7 +63,7 @@ def load_previous_messages(user):
     all_messages = all_messages[:-1] #Remove the last character of the string, which will always be a '\n'. Looks can easily deceive, because this is one single character, even though it looks like two!
     send_to_user(user, all_messages)
 
-def handle_server_commands(user: User, message):
+def handle_server_commands(user: User, message: str):
     message = message[1:] # remove the slash ('/') from the message
     message_tokens = message.split(" ")
 
