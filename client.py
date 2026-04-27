@@ -11,7 +11,6 @@ curses_lock = threading.Lock()
 
 running = True
 
-
 def center_text(scr, text: str, start_y: int = 0):
     height, width = scr.getmaxyx()
     lines = text.strip().split("\n")
@@ -79,6 +78,9 @@ def run_client(stdscr, username: str):
     # input_win = curses.newwin(1, len(prompt) + max_input_len , height - 1, 0)
     input_win = curses.newwin(1, width, height - 1, 0)
 
+    # Connections window
+    connections_win = curses.newwin(20, 25, int(height / 2 - 10), width - 25)
+
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect(SERVER_ADDRESS)
 
@@ -100,14 +102,17 @@ def run_client(stdscr, username: str):
                     display_message(msg[1:])
                 else:
                     # Now that's interesting. That did not start with an @. That must mean it's a server command
-                    msg: list[str] = msg.split(" ")
+                    msg: list[str] = msg.split(" ", 1)  # maxsplit=1
                     if msg[0] == "clear":
                         msg_win.clear()
                         msg_win.refresh()
                     if msg[0] == "center":
                         center_text(msg_win, msg[1])
                         msg_win.refresh()
-
+                    if msg[0] == "connections":
+                        connections_win.clear()
+                        connections_win.addstr(msg[1])
+                        connections_win.refresh()
             except:
                 break
 

@@ -20,7 +20,6 @@ class PendingStates(Enum):
     PRIVATE_PENDING = 1
     MINIGAME_PENDING = 2
 
-
 class User:
     def __init__(self, username, client_socket):
         self.username = username
@@ -100,7 +99,6 @@ def handle_server_commands(user: User, message: str):
                         ongoing_games.append(ttt(request.sender, request.recipient, len(ongoing_games)))
                         send_to_user(request.recipient, ascii.get_tictactoe_board(ongoing_games[len(ongoing_games) - 1].board, ongoing_games[len(ongoing_games) - 1].player_1.username))
                         send_to_user(request.sender, ascii.get_tictactoe_board(ongoing_games[len(ongoing_games) - 1].board, ongoing_games[len(ongoing_games) - 1].player_1.username))
-
                         break
 
             else:
@@ -205,8 +203,8 @@ def handle_game_message(user: User, message: str):
                     if winner_username != "":
                         broadcast(f"*** {winner_username} has won a game of TicTacToe against {game.players[game.winner - 1].username}! ***")
 
-
 def handle_new_connection(user: User):
+    print("WE be handling")
     while True:
         try:
             message = receive_from_user(user)
@@ -242,6 +240,15 @@ def receive():
         broadcast(f"{new_user.username} has joined the chat")
         load_previous_messages(new_user)
         participants.append(new_user)
+
+        from time import sleep
+        sleep(0.5)
+
+
+
+        for participant in participants:
+            send_to_user_raw(participant, f"connections {ascii.get_chat_users(participants)}")
+
 
         thread = threading.Thread(target=handle_new_connection, args=(new_user,))
         thread.start()

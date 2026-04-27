@@ -236,3 +236,16 @@ def get_tictactoe_board(board: list[int], username: str, winner: str = ""):
 
 ════════════════════════
 """
+
+def get_chat_users(participants: list):
+    user_lines = "\n".join(f"   > {user.username}" for user in participants)
+
+    return f"""
+  ═════════════════════
+
+  Users in chat ({len(participants)})
+
+{user_lines}
+
+  ═════════════════════
+"""
