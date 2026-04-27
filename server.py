@@ -124,7 +124,7 @@ def handle_server_commands(user: User, message: str):
                 send_to_user(user, ascii.no_invitation_to_decline)
 
         elif message_tokens[0] == "quit":
-            send_to_user_raw(user, "quit")
+            send_to_user_raw(user, "quit") # does absolutely nothing for now
 
         elif message_tokens[0] == "help":
             send_to_user(user, ascii.help_message)
@@ -221,6 +221,8 @@ def handle_new_connection(user: User):
             print(e)
             try:
                 participants.remove(user)
+                for participant in participants:
+                    send_to_user_raw(participant, f"connections {ascii.get_chat_users(participants)}")
                 user.client_socket.close()
                 broadcast(f"{user.username} has left the chatroom")
             finally:

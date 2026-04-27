@@ -53,10 +53,14 @@ def prep_client(stdscr):
 
     center_text(ascii_win, ascii.title, 1)
     center_text(input_prompt_win, ascii.username_prompt, 0)
+
     input_prompt_win.refresh()
     ascii_win.refresh()
 
     username = handle_input(username_input_win, max_username_len)
+
+    ascii_win.clear()
+    ascii_win.refresh()
 
     return username
 
@@ -67,7 +71,7 @@ def run_client(stdscr, username: str):
     height, width = stdscr.getmaxyx()
 
     # Message window (all lines except the last)
-    msg_win = curses.newwin(height - 1, width, 0, 0)
+    msg_win = curses.newwin(height - 1, width - 25, 0, 0)
     msg_win.scrollok(True)  # auto-scroll when full
     msg_win.clear()
     msg_win.refresh()
@@ -76,7 +80,7 @@ def run_client(stdscr, username: str):
     max_input_len = 90
     prompt = f"{username}: "
     # input_win = curses.newwin(1, len(prompt) + max_input_len , height - 1, 0)
-    input_win = curses.newwin(1, width, height - 1, 0)
+    input_win = curses.newwin(1, width - 25, height - 1, 0)
 
     # Connections window
     connections_win = curses.newwin(20, 25, int(height / 2 - 10), width - 25)
@@ -128,14 +132,16 @@ def run_client(stdscr, username: str):
 
         msg = handle_input(input_win, max_input_len, prompt)
 
-        if msg == "/quit": # This has to be here :(
-            break
+
 
         with curses_lock:
             input_win.clear()  # wipe whatever is left in the buffer. I can't get shit to work without this here for some reason.
             input_win.refresh()
 
         client.send(msg.encode(ENCODING))
+
+        if msg == "/quit": # This has to be here :(
+            break
 
     client.close()
     print("Connection to server closed")
