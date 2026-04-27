@@ -139,10 +139,10 @@ def handle_server_commands(user: User, message: str):
 
                 load_previous_messages(user)
                 load_previous_messages(user.pm_partner)
-            elif user.state == MessageStates.MINIGAME_STATE:
-                send_to_user_raw(user, "clear")
-                user.state = MessageStates.PUBLIC_STATE
-                load_previous_messages(user)
+            elif user.state == MessageStates.MINIGAME_STATE: #This handles everything for me inside handle_game_message
+                for game in ongoing_games:
+                    if game.player_1 == user or game.player_2 == user: # This method is very slow and very stupid. Why are we checking every single game?
+                        handle_game_message(user, "leave")
             else:
                 send_to_user(user, ascii.no_session_to_leave)
         else:
@@ -184,6 +184,21 @@ def handle_server_commands(user: User, message: str):
 def handle_game_message(user: User, message: str):
     for game in ongoing_games:
         if user in game.players:
+            if message == "leave":
+                loser = user
+                winner = game.player_2 if user == game.player_1 else game.player_1
+
+                broadcast(f"*** {winner.username} has won a game of TicTacToe against {loser.username} by resignation! ***")
+
+                for player in [winner, loser]:
+                    print(f"Handling for {player.username}")
+                    send_to_user_raw(player, "clear")
+                    player.state = MessageStates.PUBLIC_STATE
+                    load_previous_messages(player)
+
+                ongoing_games.remove(game)
+                break
+
             if game.players[game.turn] == user:
                 try:
                     msg = int(message)
@@ -204,7 +219,6 @@ def handle_game_message(user: User, message: str):
                         broadcast(f"*** {winner_username} has won a game of TicTacToe against {game.players[game.winner - 1].username}! ***")
 
 def handle_new_connection(user: User):
-    print("WE be handling")
     while True:
         try:
             message = receive_from_user(user)
@@ -243,7 +257,7 @@ def receive():
         load_previous_messages(new_user)
         participants.append(new_user)
 
-        from time import sleep
+        from time import sleep # Haha we don't have a breakpoint for incoming messages in a row
         sleep(0.5)
 
 
