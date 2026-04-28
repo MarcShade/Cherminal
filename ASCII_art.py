@@ -65,9 +65,10 @@ help_message = """
    Available commands:
 
    /pm [username]   Send a private message invite
+   /ttt [username]  Send a tic tac tor invite
    /accept          Accept a pending invitation
    /decline         Decline a pending invitation
-   /leave           Leave the private message session
+   /leave           Leave a session
    /quit            Quit the program
    /help            Show this message
 
