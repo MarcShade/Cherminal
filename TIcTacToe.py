@@ -20,6 +20,7 @@ class TicTacToe:
         self.turn: int = 0
         self.winner: int = 0
         self.index = index # This is only to keep track of what index in the list of games on the server this is.
+        self.moves_played = 0
 
         self.player_1 = player_1
         self.player_2 = player_2
@@ -29,14 +30,17 @@ class TicTacToe:
     def is_square_free(self, tile: int) -> bool:
         return self.board[tile] == 0
 
-    def move(self, tile: int):
+    def move(self, tile: int) -> int: # Status return
         if self.is_square_free(tile):
             if self.winner:
-                return
+                return 0
             self.turn = (self.turn + 1) % 2
+            self.moves_played += 1
             self.board[tile] = self.turn + 1
 
             self.winner = self.check_win()
+            return 1
+        return 0
 
     def check_win(self) -> int:
         for condition in WIN_CONDITIONS:

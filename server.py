@@ -206,7 +206,8 @@ def handle_game_message(user: User, message: str):
                     return
 
                 if msg >= 1 or msg <= 9:
-                    game.move(msg-1)
+                    if game.move(msg-1) == 0:
+                        return
                     send_to_user_raw(game.player_1, "clear")
                     send_to_user_raw(game.player_2, "clear")
 
@@ -214,6 +215,10 @@ def handle_game_message(user: User, message: str):
                     send_to_user(game.player_1, str(game.winner))
                     send_to_user(game.player_1, ascii.get_tictactoe_board(game.board, game.players[game.turn].username, winner_username))
                     send_to_user(game.player_2, ascii.get_tictactoe_board(game.board, game.players[game.turn].username, winner_username))
+
+                    if game.moves_played == 9 and winner_username == "":
+                        broadcast(f"*** {game.player_1.username} and {game.player_1.username} drew their game of TicTacToe ***")
+
 
                     if winner_username != "":
                         broadcast(f"*** {winner_username} has won a game of TicTacToe against {game.players[game.winner - 1].username}! ***")
