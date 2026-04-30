@@ -1,3 +1,5 @@
+import textwrap
+
 title = """
    :####:  ##    ##  ########  ######:   ###  ###   ######   ###   ##    :##:    ##       
   ######  ##    ##  ########  #######   ###  ###   ######   ###   ##     ##     ##       
@@ -238,15 +240,27 @@ def get_tictactoe_board(board: list[int], username: str, winner: str = ""):
 ════════════════════════
 """
 
+import textwrap
+
 def get_chat_users(participants: list):
-    user_lines = "\n".join(f"   > {user.username}" for user in participants)
+    prefix = "> "
+    indent = "   "
+
+    user_lines = "\n".join(
+        textwrap.fill(
+            f"{prefix}{user.username}",
+            width=20,
+            subsequent_indent=indent
+        )
+        for user in participants
+    )
 
     return f"""
   ═════════════════════
 
-  Users in chat ({len(participants)})
-
-{user_lines}
+   Users in chat ({len(participants)})
+  
+   {user_lines}
 
   ═════════════════════
 """

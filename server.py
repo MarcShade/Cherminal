@@ -262,14 +262,11 @@ def receive():
         load_previous_messages(new_user)
         participants.append(new_user)
 
-        from time import sleep # Haha we don't have a breakpoint for incoming messages in a row
+        from time import sleep # Haha, we don't have a breakpoint for incoming messages in a row
         sleep(0.5)
-
-
 
         for participant in participants:
             send_to_user_raw(participant, f"connections {ascii.get_chat_users(participants)}")
-
 
         thread = threading.Thread(target=handle_new_connection, args=(new_user,))
         thread.start()
