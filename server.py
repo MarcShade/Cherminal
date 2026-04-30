@@ -4,6 +4,7 @@ from enum import Enum
 import ASCII_art as ascii
 from collections import deque
 from TIcTacToe import TicTacToe as ttt
+from time import sleep  # Haha, we don't have a breakpoint for incoming messages in a row
 
 ENCODING = 'utf-8'
 SERVER_ADDRESS = (socket.gethostname(), 15662)
@@ -225,6 +226,7 @@ def handle_game_message(user: User, message: str):
 
 def handle_new_connection(user: User):
     while True:
+
         try:
             message = receive_from_user(user)
             if message.startswith("/"):
@@ -258,11 +260,13 @@ def receive():
 
         new_user = User(username, client_socket)
 
+        send_to_user(new_user, f"Welcome to the chatroom, use /help to see available commands")
+        sleep(0.5)
         broadcast(f"{new_user.username} has joined the chat")
+
         load_previous_messages(new_user)
         participants.append(new_user)
 
-        from time import sleep # Haha, we don't have a breakpoint for incoming messages in a row
         sleep(0.5)
 
         for participant in participants:
