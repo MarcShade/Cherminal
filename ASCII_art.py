@@ -240,27 +240,27 @@ def get_tictactoe_board(board: list[int], username: str, winner: str = ""):
 ════════════════════════
 """
 
-import textwrap
 
 def get_chat_users(participants: list):
-    prefix = "> "
-    indent = "   "
-
     user_lines = "\n".join(
         textwrap.fill(
-            f"{prefix}{user.username}",
+            user.username,  # just the name, no prefix in text
             width=20,
-            subsequent_indent=indent
+            initial_indent="> ",  # > is part of the indent, not a word
+            subsequent_indent="   ",
+            break_long_words=True
         )
         for user in participants
     )
+
+    indented_users = textwrap.indent(user_lines, "   ")  # indent every line
 
     return f"""
   ═════════════════════
 
    Users in chat ({len(participants)})
-  
-   {user_lines}
+
+{indented_users}
 
   ═════════════════════
 """
