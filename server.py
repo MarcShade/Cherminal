@@ -189,7 +189,9 @@ def handle_game_message(user: User, message: str):
                 loser = user
                 winner = game.player_2 if user == game.player_1 else game.player_1
 
+                sleep(0.5)
                 broadcast(f"*** {winner.username} has won a game of TicTacToe against {loser.username} by resignation! ***")
+                sleep(0.5)
 
                 for player in [winner, loser]:
                     print(f"Handling for {player.username}")
@@ -219,10 +221,20 @@ def handle_game_message(user: User, message: str):
 
                     if game.moves_played == 9 and winner_username == "":
                         broadcast(f"*** {game.player_1.username} and {game.player_1.username} drew their game of TicTacToe ***")
+                        for player in game.players:
+                            print(f"Handling for {player.username}")
+                            send_to_user_raw(player, "clear")
+                            player.state = MessageStates.PUBLIC_STATE
+                            load_previous_messages(player)
 
 
                     if winner_username != "":
                         broadcast(f"*** {winner_username} has won a game of TicTacToe against {game.players[game.winner - 1].username}! ***")
+                        for player in game.players:
+                            print(f"Handling for {player.username}")
+                            send_to_user_raw(player, "clear")
+                            player.state = MessageStates.PUBLIC_STATE
+                            load_previous_messages(player)
 
 def handle_new_connection(user: User):
     while True:
