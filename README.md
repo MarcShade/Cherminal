@@ -1,10 +1,46 @@
 # Cherminal
 Cherminal (née Черминаль) er et terminal-baseret chatroom udviklet af M. S. Sørensen og M. H. Kokholm som eksamensprojekt i Programmering B.
 
-## Hvordan det er lavet
-**Brugt tech:** Python samt diverse biblioteker som socket, threading og curses.
+## Features
 
-For at kargløre programmet skal du skrive ```git clone https://github.com/MarcShade/Cherminal``` og installer de nødvendige dependencies ved ```pip install -r requirements.txt```. Sikrer dig, at en server er startet ved at køre server.py på en maskine på samme netværk og kør derefter en eller flere klienter i terminalen ved at skrive ```python client.py```. Det er vigtigt at bemærke, at ```SERVER_ADDRESS```-variablen i ```client.py``` skal være IPV4-addressen af maskinen som kører serveren.
+- Offentlig chat mellem flere brugere
+- Private beskeder via `/pm [brugernavn]`
+- Kryds og bolle via `/ttt [brugernavn]`
+- Simpelt terminal-GUI via curses
 
-## Hvad har vi lært?
-Projektet har givet et godt indblik i hvordan netværk fungerer.
+## Installation
+
+```bash
+git clone https://github.com/MarcShade/Cherminal
+cd Cherminal
+pip install -r requirements.txt
+```
+
+## Brug
+
+Start serveren:
+```bash
+python server.py
+```
+
+Start klienten (i en separat terminal):
+```bash
+python client.py
+```
+Det er vigtigt at bemærke, at ```SERVER_ADDRESS```-variablen i ```client.py``` skal være IPV4-addressen af maskinen som kører serveren.
+
+## Kommandoer
+
+| Kommando | Beskrivelse |
+|---|---|
+| `/pm [brugernavn]` | Send en privat besked-invitation |
+| `/ttt [brugernavn]` | Send en kryds og bolle-invitation |
+| `/accept` | Acceptér en invitation |
+| `/decline` | Afvis en invitation |
+| `/leave` | Forlad en session |
+| `/help` | Vis tilgængelige kommandoer |
+| `/quit` | Afslut programmet |
+
+## Teknologier
+
+Python · socket · threading · curses
