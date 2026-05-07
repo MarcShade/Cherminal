@@ -1,19 +1,46 @@
 # Cherminal
-Cherminal (née Черминаль) er et terminal-baseret chatroom udviklet af M. S. Sørensen og M. H. Kokholm som eksamensprojekt i Programmering B.
 
-## Hvordan det er lavet
-**Brugt tech:** Python, socket, threading og curses
+Et terminalbaseret chatrum skrevet i Python, udviklet som eksamensprojekt i Programmering B.
 
-Skriv ```git clone https://github.com/MarcShade/Cherminal```, installer de nødvendige dependencies ved ```pip install -r requirements.txt```, og kør programmet i terminalen ved at skrive ```python client.py``` (Det her bliver nok ændret)
+## Features
 
-## Hvad har vi lært?
+- Offentlig chat mellem flere brugere
+- Private beskeder via `/pm [brugernavn]`
+- Kryds og bolle via `/ttt [brugernavn]`
+- Simpelt terminal-GUI via curses
 
-Pis og papir indtil videre
+## Installation
 
-## Forbedringsforslag
+```bash
+git clone https://github.com/MarcShade/Cherminal
+cd Cherminal
+pip install -r requirements.txt
+```
 
-Cirka det hele
+## Brug
 
-## Relevante links, charts og diagrammer
+Start serveren:
+```bash
+python server.py
+```
 
-**Subscribe til min Youtubekanal:** https://www.youtube.com/@ShadeOriginal
+Start klienten (i en separat terminal):
+```bash
+python client.py
+```
+
+## Kommandoer
+
+| Kommando | Beskrivelse |
+|---|---|
+| `/pm [brugernavn]` | Send en privat besked-invitation |
+| `/ttt [brugernavn]` | Send en kryds og bolle-invitation |
+| `/accept` | Acceptér en invitation |
+| `/decline` | Afvis en invitation |
+| `/leave` | Forlad en session |
+| `/help` | Vis tilgængelige kommandoer |
+| `/quit` | Afslut programmet |
+
+## Teknologier
+
+Python · socket · threading · curses
